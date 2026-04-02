@@ -1,287 +1,337 @@
-<div class="page">
-  <!-- ══════ HEADER ══════ -->
+<div class="app">
+
+  <!-- ══════ HEADER + PROGRESS BAR ══════ -->
   <header class="hdr">
     <div class="hdr-left">
-      <span class="material-symbols-rounded hdr-logo">neurology</span>
+      <span class="material-symbols-rounded hdr-logo">shield</span>
       <div>
         <h1 class="hdr-title">Compliance Intelligence</h1>
-        <p class="hdr-sub">Knowledge Work Automation for FSI</p>
+        <p class="hdr-sub">Knowledge Work Automation · FSI</p>
       </div>
     </div>
-    <nav class="tabs">
-      <button class="tab" [class.on]="activeTab==='overview'" (click)="activeTab='overview'">
-        <span class="material-symbols-rounded">dashboard</span> Overview
-      </button>
-      <button class="tab" [class.on]="activeTab==='issues'" (click)="activeTab='issues'">
-        <span class="material-symbols-rounded">policy</span> Issues
-        <span class="tab-badge">{{ totalCases }}</span>
-      </button>
-    </nav>
   </header>
 
-  <!-- ══════ OVERVIEW TAB ══════ -->
-  @if (activeTab === 'overview') {
-  <div class="view fade-up">
-
-    <!-- Input -->
-    <section class="card input-card">
-      <div class="input-row">
-        <div class="input-wrap">
-          <span class="material-symbols-rounded ic-muted">search</span>
-          <input class="input" value="Check compliance of Vendor Contract X against EU AI Act" readonly />
-        </div>
-        <button class="btn-primary" (click)="runAnalysis()" [class.busy]="pipelineRunning">
-          <span class="material-symbols-rounded">{{ pipelineRunning ? 'hourglass_top' : 'play_arrow' }}</span>
-          {{ pipelineRunning ? 'Analyzing…' : 'Run Analysis' }}
-        </button>
-      </div>
-      <div class="badges">
-        <span class="badges-lbl">Sources</span>
-        @for (s of dataSources; track s.label) {
-          <span class="badge" [style.--c]="s.color">
-            <span class="material-symbols-rounded">{{ s.icon }}</span>{{ s.label }}
-          </span>
-        }
-      </div>
-    </section>
-
-    <!-- Pipeline -->
-    <section class="card">
-      <div class="sec-hdr"><span class="material-symbols-rounded sh-icon pipe-c">route</span><h2>Pipeline</h2></div>
-      <div class="pipe">
-        @for (step of pipelineSteps; track step.label; let i = $index) {
-          <div class="pipe-step" [class.done]="i <= activeStep" [class.now]="i === activeStep && pipelineRunning">
-            <div class="pipe-dot"><span class="material-symbols-rounded">{{ i <= activeStep ? 'check' : step.icon }}</span></div>
-            <span class="pipe-lbl">{{ step.label }}</span>
-          </div>
-          @if (i < pipelineSteps.length - 1) {
-            <div class="pipe-line" [class.done]="i < activeStep"></div>
-          }
-        }
-      </div>
-    </section>
-
-    <!-- Result + Comparison side by side -->
-    @if (showResult) {
-    <div class="two-col fade-up">
-      <!-- Violation Detected -->
-      <section class="card">
-        <div class="sec-hdr"><span class="material-symbols-rounded sh-icon red-c">error</span><h2>Violation Detected</h2><span class="sev-pill high">High Severity</span></div>
-        <div class="viol-body">
-          <div class="viol-row">
-            <span class="viol-label">Clause</span>
-            <span class="viol-val">"Invoice issued after <mark class="violation-hl">45 days</mark>"</span>
-          </div>
-          <div class="viol-row">
-            <span class="viol-label">Rule</span>
-            <span class="viol-val">"Must be issued within 30 days"</span>
-          </div>
-          <div class="viol-row">
-            <span class="viol-label">Source</span>
-            <span class="viol-val muted">EU AI Act — Art. 9, §3</span>
-          </div>
-        </div>
-      </section>
-
-      <!-- Comparison -->
-      @if (showComparison) {
-      <section class="card cmp-card fade-up">
-        <div class="sec-hdr"><span class="material-symbols-rounded sh-icon blue-c">compare</span><h2>Comparison</h2></div>
-        <div class="cmp-grid">
-          <div class="cmp-side rule-side">
-            <div class="cmp-tag"><span class="material-symbols-rounded">gavel</span> Rule (Source of Truth)</div>
-            <p class="cmp-text">"Invoices must be issued within <strong>30 days</strong> of service delivery."</p>
-          </div>
-          <div class="cmp-vs">VS</div>
-          <div class="cmp-side doc-side">
-            <div class="cmp-tag"><span class="material-symbols-rounded">description</span> Actual Document</div>
-            <p class="cmp-text">"Invoice issued after <mark class="violation-hl">45 days</mark> of service delivery."</p>
-          </div>
-        </div>
-        <div class="cmp-score">
-          <span class="material-symbols-rounded">cancel</span>
-          Match Score: <strong>0%</strong> — Non-compliant
-        </div>
-      </section>
-      }
-    </div>
-    }
-
-    <!-- Actions + Evaluation + Human-in-the-loop -->
-    @if (showActions) {
-    <div class="two-col fade-up">
-      <!-- Actions -->
-      <section class="card">
-        <div class="sec-hdr"><span class="material-symbols-rounded sh-icon violet-c">bolt</span><h2>Actions</h2></div>
-        <div class="act-btns">
-          <button class="act-btn"><span class="material-symbols-rounded">flag</span>Flag for review</button>
-          <button class="act-btn"><span class="material-symbols-rounded">mail</span>Notify compliance team</button>
-          <button class="act-btn"><span class="material-symbols-rounded">edit_document</span>Request correction</button>
-        </div>
-        <!-- Human-in-the-loop -->
-        <div class="hitl">
-          <span class="hitl-label">Human Review</span>
-          @if (findingStatus === 'pending') {
-            <button class="hitl-btn accept" (click)="acceptFinding()"><span class="material-symbols-rounded">check_circle</span>Accept</button>
-            <button class="hitl-btn reject" (click)="rejectFinding()"><span class="material-symbols-rounded">cancel</span>Reject</button>
+  <nav class="progress-bar">
+    @for (s of steps; track s.key; let i = $index) {
+      <div class="pb-step" [class.active]="currentStep === s.key" [class.done]="i < stepIndex" (click)="goTo(s.key)">
+        <div class="pb-dot">
+          @if (i < stepIndex) {
+            <span class="material-symbols-rounded">check</span>
           } @else {
-            <span class="hitl-result" [class.accepted]="findingStatus==='accepted'" [class.rejected]="findingStatus==='rejected'">
-              <span class="material-symbols-rounded">{{ findingStatus === 'accepted' ? 'verified' : 'block' }}</span>
-              {{ findingStatus === 'accepted' ? 'Finding Accepted' : 'Finding Rejected' }}
-            </span>
+            <span class="pb-num">{{ i + 1 }}</span>
           }
         </div>
-        <!-- Link to Issues -->
-        <button class="link-issues" (click)="switchToIssues()">
-          <span class="material-symbols-rounded">policy</span>View all detected issues<span class="material-symbols-rounded arr">arrow_forward</span>
-        </button>
-      </section>
-      <!-- Evaluation -->
-      @if (showEvaluation) {
-      <section class="card eval-card fade-up">
-        <div class="sec-hdr"><span class="material-symbols-rounded sh-icon green-c">verified</span><h2>Evaluation (Trust Layer)</h2></div>
-        <div class="eval-bars">
-          @for (e of evaluation; track e.label) {
-            <div class="eval-row">
-              <span class="eval-lbl">{{ e.label }}</span>
-              <div class="eval-track"><div class="eval-fill" [style.width.%]="e.value" [style.background]="e.color"></div></div>
-              <span class="eval-pct" [style.color]="e.color">{{ e.value }}%</span>
+        <span class="pb-label">{{ s.label }}</span>
+      </div>
+      @if (i < steps.length - 1) {
+        <div class="pb-line" [class.done]="i < stepIndex"></div>
+      }
+    }
+  </nav>
+
+  <div class="content">
+
+    <!-- ══════ STEP 1: UPLOAD ══════ -->
+    @if (currentStep === 'upload') {
+    <div class="step fade">
+      <div class="step-center">
+        @if (!fileUploaded) {
+          <div class="drop-zone" [class.over]="dragOver"
+            (drop)="onFileDrop($event)" (dragover)="onDragOver($event)" (dragleave)="onDragLeave()">
+            <span class="material-symbols-rounded drop-icon">cloud_upload</span>
+            <h2>Upload Contract Document</h2>
+            <p>Drag and drop your contract PDF here, or click to browse</p>
+            <button class="btn-outline" (click)="onFileSelect()">Choose File</button>
+          </div>
+        } @else {
+          <div class="upload-success">
+            <span class="material-symbols-rounded success-icon">check_circle</span>
+            <h2>Document Uploaded</h2>
+            <div class="file-info">
+              <span class="material-symbols-rounded">description</span>
+              <span>{{ fileName }}</span>
+            </div>
+            <button class="btn-dark" (click)="nextStep()">NEXT: GENERATE RULES →</button>
+          </div>
+        }
+      </div>
+    </div>
+    }
+
+    <!-- ══════ STEP 2: RULES ══════ -->
+    @if (currentStep === 'rules') {
+    <div class="step fade">
+      @if (!rulesGenerated) {
+        <div class="step-center">
+          @if (!rulesGenerating) {
+            <button class="btn-dark" (click)="generateRules()">Generate Rules from Regulations</button>
+          } @else {
+            <div class="generating">
+              <div class="spinner"></div>
+              <p>Generating compliance rules from selected regulations…</p>
             </div>
           }
         </div>
-        <div class="eval-examples">
-          <span class="eval-ex-title">Verification Samples</span>
-          @for (ex of evalExamples; track ex.expected) {
-            <div class="eval-ex">
-              <span class="eval-ex-lbl">Expected:</span><span>{{ ex.expected }}</span>
-              <span class="eval-ex-lbl">Detected:</span><span>{{ ex.detected }}</span>
-              <span class="eval-match"><span class="material-symbols-rounded">check_circle</span>Match</span>
+      }
+      @if (rulesGenerated) {
+        <h2 class="sec-title">Generated Compliance Rules</h2>
+        <p class="sec-sub">Toggle rules on/off. Click a rule to edit its criteria.</p>
+        <div class="rules-table">
+          <div class="rt-header">
+            <span class="rt-col rt-active">ACTIVE</span>
+            <span class="rt-col rt-id">ID</span>
+            <span class="rt-col rt-title">RULE TITLE</span>
+            <span class="rt-col rt-source">SOURCE</span>
+            <span class="rt-col rt-desc">DESCRIPTION</span>
+          </div>
+          @for (rule of rules; track rule.id) {
+            <div class="rt-row" [class.off]="!rule.active">
+              <span class="rt-col rt-active">
+                <label class="toggle"><input type="checkbox" [(ngModel)]="rule.active" /><span class="toggle-track"><span class="toggle-thumb"></span></span></label>
+              </span>
+              <span class="rt-col rt-id">{{ rule.id }}</span>
+              <span class="rt-col rt-title fw">{{ rule.title }}</span>
+              <span class="rt-col rt-source">{{ rule.source }}</span>
+              <span class="rt-col rt-desc">{{ rule.description }}</span>
             </div>
           }
         </div>
-      </section>
+        <div class="step-footer-right">
+          <button class="btn-dark" (click)="nextStep()">NEXT: ANALYZE CONTRACTS →</button>
+        </div>
       }
     </div>
     }
 
-  </div>
-  }
-
-  <!-- ══════ ISSUES TAB ══════ -->
-  @if (activeTab === 'issues') {
-  <div class="view fade-up">
-    <div class="issues-layout">
-
-      <!-- Left: List -->
-      <aside class="issues-list-panel card">
-        <div class="sec-hdr il-hdr">
-          <span class="material-symbols-rounded sh-icon violet-c">policy</span>
-          <div><h2>Detected Issues</h2><p class="sub">Across {{ totalCases }} documents</p></div>
+    <!-- ══════ STEP 3: ANALYSIS ══════ -->
+    @if (currentStep === 'analysis') {
+    <div class="step fade">
+      <div class="analysis-grid">
+        <!-- Left: Contract -->
+        <div class="contract-panel">
+          <h3 class="panel-title">ORIGINAL CONTRACT</h3>
+          <div class="contract-body">
+            @for (c of contractClauses; track c.num) {
+              <p class="clause" [class]="c.highlight">
+                <span class="clause-num">{{ c.num }}.</span>
+                @if (c.highlight === 'violation') {
+                  <span class="hl-bar violation"></span>
+                }
+                @if (c.highlight === 'warning') {
+                  <span class="hl-bar warning"></span>
+                }
+                {{ c.text }}
+              </p>
+            }
+          </div>
         </div>
-        <div class="il-items">
-          @for (issue of issues; track issue.id) {
-            <button class="il-item" [class.sel]="issue.id === selectedIssueId" (click)="selectIssue(issue.id)">
-              <div class="il-bar" [class]="issue.severity"></div>
-              <div class="il-body">
-                <div class="il-top"><span class="il-title">{{ issue.title }}</span><span class="sev-pill" [class]="issue.severity">{{ issue.severity }}</span></div>
-                <span class="il-meta"><span class="material-symbols-rounded">folder_open</span>{{ issue.cases }} cases</span>
-              </div>
-              <span class="material-symbols-rounded il-chev">chevron_right</span>
-            </button>
-          }
-        </div>
-        <div class="il-footer">
-          <div class="il-stat"><span class="il-num">{{ issues.length }}</span><span class="il-lbl">Issues</span></div>
-          <div class="il-stat"><span class="il-num high-c">{{ highCount }}</span><span class="il-lbl">High</span></div>
-          <div class="il-stat"><span class="il-num med-c">{{ mediumCount }}</span><span class="il-lbl">Medium</span></div>
-        </div>
-      </aside>
 
-      <!-- Right: Detail -->
-      <main class="issue-detail card">
-        <div class="id-hdr">
-          <div class="id-dot" [class]="selectedIssue.severity"></div>
-          <h2>{{ selectedIssue.title }}</h2>
-          <span class="sev-pill lg" [class]="selectedIssue.severity">{{ selectedIssue.severity }}</span>
-        </div>
-        <p class="id-sub">{{ selectedIssue.cases }} cases across multiple documents</p>
-
-        <div class="id-body">
-          <!-- Rule -->
-          <section class="id-sec">
-            <div class="sec-hdr"><span class="material-symbols-rounded sh-icon blue-c">gavel</span><h3>Rule</h3></div>
-            <div class="rule-box">
-              <p class="rule-txt">{{ selectedIssue.rule }}</p>
-              <span class="rule-src"><span class="material-symbols-rounded">menu_book</span>{{ selectedIssue.ruleSource }}</span>
-            </div>
-          </section>
-
-          <!-- Affected Cases -->
-          <section class="id-sec">
-            <div class="sec-hdr"><span class="material-symbols-rounded sh-icon orange-c">compare</span><h3>Affected Cases</h3><span class="cnt-pill">{{ selectedIssue.documents.length }} docs</span></div>
-            @for (doc of selectedIssue.documents; track doc.name) {
-              <div class="doc-card">
-                <div class="doc-hdr"><span class="material-symbols-rounded">description</span><span class="doc-name">{{ doc.name }}</span></div>
-                <div class="doc-rows">
-                  <div class="doc-row exp"><span class="doc-lbl">Expected</span><span>{{ doc.expected }}</span></div>
-                  <div class="doc-row act"><span class="doc-lbl">Actual</span><span [innerHTML]="highlightText(doc.actual, doc.highlight)"></span></div>
+        <!-- Right: Flags -->
+        <div class="flags-panel">
+          <h3 class="panel-title">COMPLIANCE CHECK RESULTS</h3>
+          <div class="flags-list">
+            @for (f of flags; track f.id) {
+              <div class="flag-card">
+                <div class="flag-header">
+                  <h4>Flag {{ f.id }} — {{ f.title }}</h4>
+                  <span class="sev" [class]="f.severity">{{ f.severity }}</span>
+                </div>
+                <div class="flag-body">
+                  <div class="flag-row"><span class="flag-label">Rule:</span> {{ f.ruleId }} — {{ rules.length > 0 ? f.title : '' }}</div>
+                  <div class="flag-row"><span class="flag-label">Issue:</span> {{ f.issue }}</div>
+                  <div class="flag-row"><span class="flag-label">Contract:</span> <em>{{ f.contractRef }}</em></div>
+                  @if (f.regulationRef) {
+                    <div class="flag-row"><span class="flag-label">Regulation:</span> <em>{{ f.regulationRef }}</em></div>
+                  }
+                  <div class="confidence-row">
+                    <span class="conf-label">Confidence: {{ f.confidence }}%</span>
+                    <div class="conf-bar"><div class="conf-fill" [style.width.%]="f.confidence"></div></div>
+                  </div>
+                </div>
+                <div class="flag-actions">
+                  @if (f.feedback === 'pending') {
+                    <button class="fa-btn agree" (click)="setFeedback(f,'agreed')"><span class="material-symbols-rounded">check_circle</span> Agree</button>
+                    <button class="fa-btn dismiss" (click)="setFeedback(f,'dismissed')"><span class="material-symbols-rounded">cancel</span> Dismiss</button>
+                    <button class="fa-btn neutral" (click)="setFeedback(f,'neutral')"><span class="material-symbols-rounded">remove_circle_outline</span> Neutral</button>
+                  } @else {
+                    <span class="fa-result" [class]="f.feedback">
+                      <span class="material-symbols-rounded">{{ f.feedback === 'agreed' ? 'verified' : f.feedback === 'dismissed' ? 'block' : 'remove_circle_outline' }}</span>
+                      {{ f.feedback === 'agreed' ? 'Agreed' : f.feedback === 'dismissed' ? 'Dismissed' : 'Neutral' }}
+                    </span>
+                  }
                 </div>
               </div>
             }
-          </section>
+          </div>
+        </div>
+      </div>
+      <div class="step-footer-right">
+        <button class="btn-dark" (click)="nextStep()">NEXT: ESCALATION →</button>
+      </div>
+    </div>
+    }
 
-          <!-- Discrepancy -->
-          <section class="id-sec">
-            <div class="sec-hdr"><span class="material-symbols-rounded sh-icon purple-c">assessment</span><h3>Discrepancy Summary</h3></div>
-            <div class="disc-card">
-              <div class="disc-num"><span>{{ selectedIssue.summary.affectedRecords }}</span><small>records</small></div>
-              <div class="disc-detail">{{ selectedIssue.summary.detail }}</div>
-            </div>
-          </section>
-
-          <!-- Comparison (reused pattern) -->
-          <section class="id-sec">
-            <div class="sec-hdr"><span class="material-symbols-rounded sh-icon blue-c">compare</span><h3>Comparison</h3></div>
-            <div class="cmp-grid compact">
-              <div class="cmp-side rule-side">
-                <div class="cmp-tag"><span class="material-symbols-rounded">gavel</span> Rule</div>
-                <p class="cmp-text">{{ selectedIssue.documents[0].expected }}</p>
-              </div>
-              <div class="cmp-vs">VS</div>
-              <div class="cmp-side doc-side">
-                <div class="cmp-tag"><span class="material-symbols-rounded">description</span> Document</div>
-                <p class="cmp-text" [innerHTML]="highlightText(selectedIssue.documents[0].actual, selectedIssue.documents[0].highlight)"></p>
-              </div>
-            </div>
-          </section>
-
-          <div class="id-bottom">
-            <!-- Actions -->
-            <section class="id-sec id-half">
-              <div class="sec-hdr"><span class="material-symbols-rounded sh-icon violet-c">bolt</span><h3>Actions</h3></div>
-              <div class="act-btns col">
-                @for (a of selectedIssue.actions; track a.label) {
-                  <button class="act-btn"><span class="material-symbols-rounded">{{ a.icon }}</span>{{ a.label }}</button>
+    <!-- ══════ STEP 4: ESCALATION ══════ -->
+    @if (currentStep === 'escalation') {
+    <div class="step fade">
+      <div class="analysis-grid">
+        <!-- Left: Contract with confirmed issues -->
+        <div class="contract-panel">
+          <h3 class="panel-title">ORIGINAL CONTRACT — CONFIRMED ISSUES</h3>
+          <div class="contract-body compact">
+            @for (c of contractClauses; track c.num) {
+              <p class="clause" [class]="c.highlight">
+                <span class="clause-num">{{ c.num }}.</span>
+                @if (c.highlight === 'violation') { <span class="hl-bar violation"></span> }
+                @if (c.highlight === 'warning') { <span class="hl-bar warning"></span> }
+                {{ c.text }}
+                @if (c.highlight === 'violation') {
+                  <!-- confirmed violation marker -->
                 }
-              </div>
-            </section>
+              </p>
+            }
+          </div>
+        </div>
 
-            <!-- Validation -->
-            <section class="id-sec id-half eval-highlight">
-              <div class="sec-hdr"><span class="material-symbols-rounded sh-icon green-c">verified</span><h3>Validation</h3></div>
-              <div class="val-grid">
-                @for (v of selectedIssue.validation; track v.label) {
-                  <div class="val-cell">
-                    <span class="val-v" [style.color]="v.color">{{ v.value }}</span>
-                    <span class="val-l">{{ v.label }}</span>
+        <!-- Right: Escalation form -->
+        <div class="escalation-panel">
+          <h3 class="panel-title">ESCALATION</h3>
+
+          @if (!escalationSent) {
+            <!-- Risk banner -->
+            <div class="risk-banner">
+              <span class="risk-amount">{{ totalRisk }}</span>
+              <span class="risk-sub">Total Potential Risk — {{ escalatableFlags.length }} violations × €7M per incident</span>
+            </div>
+
+            <div class="esc-form">
+              <div class="esc-field">
+                <label>TO: RESPONSIBLE TEAM</label>
+                <div class="esc-select">{{ escalationTeam }}</div>
+              </div>
+              <div class="esc-field">
+                <label>CONTRACT ID</label>
+                <div class="esc-input-display">{{ contractId }}</div>
+              </div>
+              <div class="esc-field">
+                <label>SELECTED FLAGS TO ESCALATE</label>
+                <div class="esc-flags">
+                  @for (f of flags; track f.id) {
+                    @if (f.feedback !== 'dismissed') {
+                      <label class="esc-flag-row" (click)="f.escalate = !f.escalate">
+                        <span class="custom-check" [class.checked]="f.escalate">
+                          <span class="material-symbols-rounded">{{ f.escalate ? 'check_box' : 'check_box_outline_blank' }}</span>
+                        </span>
+                        <span>Flag {{ f.id }}: {{ f.title }}</span>
+                        <span class="sev sm" [class]="f.severity">{{ f.severity }}</span>
+                      </label>
+                    }
+                  }
+                </div>
+              </div>
+              <div class="esc-field">
+                <label>CUSTOM COMMENT</label>
+                <textarea class="esc-textarea" rows="3" placeholder="Add notes for the compliance team…" [(ngModel)]="escalationComment"></textarea>
+              </div>
+              <div class="esc-buttons">
+                <button class="btn-red" (click)="sendEscalation()">SEND ESCALATION EMAIL</button>
+                <button class="btn-outline">EXPORT PDF REPORT</button>
+              </div>
+            </div>
+
+            <!-- Audit Trail -->
+            <div class="audit-section">
+              <h4>Audit Trail</h4>
+              <div class="audit-list">
+                @for (a of auditTrail; track a.time) {
+                  <div class="audit-row">
+                    <span class="audit-time">{{ a.time }}</span>
+                    <span class="audit-text">{{ a.text }}</span>
                   </div>
                 }
               </div>
-            </section>
-          </div>
+            </div>
+          } @else {
+            <div class="esc-success">
+              <span class="material-symbols-rounded success-icon">check_circle</span>
+              <h3>Escalation Sent Successfully</h3>
+              <p>The compliance team has been notified about {{ escalatableFlags.length }} issues in contract {{ contractId }}.</p>
+              <button class="btn-dark" (click)="nextStep()">NEXT: EVALUATION →</button>
+            </div>
+          }
         </div>
-      </main>
+      </div>
     </div>
+    }
+
+    <!-- ══════ STEP 5: EVALUATION ══════ -->
+    @if (currentStep === 'evaluation') {
+    <div class="step fade">
+      <h2 class="sec-title">System Performance</h2>
+
+      <!-- Top metrics -->
+      <div class="eval-top-grid">
+        <div class="eval-box green-border">
+          <span class="eval-big green">{{ evalMetrics.accuracy }}<small>/{{ evalMetrics.total }}</small></span>
+          <span class="eval-label">Overall Accuracy Score</span>
+        </div>
+        <div class="eval-box">
+          <span class="eval-big">{{ evalMetrics.findings }}</span>
+          <span class="eval-label">Total Findings</span>
+        </div>
+        <div class="eval-box">
+          <span class="eval-big green">{{ evalMetrics.agreed }}</span>
+          <span class="eval-label">Agreed (True Positives)</span>
+        </div>
+        <div class="eval-box red-border">
+          <span class="eval-big red">{{ evalMetrics.dismissed }}</span>
+          <span class="eval-label">Dismissed (False Positives)</span>
+        </div>
+      </div>
+
+      <!-- Comparison table -->
+      <h3 class="sec-subtitle">Baseline Comparison: Iris Pipeline vs Raw LLM</h3>
+      <div class="cmp-table">
+        <div class="cmp-header">
+          <span class="cmp-col cmp-metric">METRIC</span>
+          <span class="cmp-col cmp-pipe">IRIS PIPELINE</span>
+          <span class="cmp-col cmp-base">RAW LLM (BASELINE)</span>
+        </div>
+        @for (row of comparisonTable; track row.metric) {
+          <div class="cmp-row">
+            <span class="cmp-col cmp-metric">{{ row.metric }}</span>
+            <span class="cmp-col cmp-pipe fw green">{{ row.pipeline }}</span>
+            <span class="cmp-col cmp-base muted">{{ row.baseline }}</span>
+          </div>
+        }
+      </div>
+      <p class="cmp-note">↑ Structured pipeline catches 60% more real violations with fewer false alarms</p>
+
+      <!-- Per-Rule Accuracy -->
+      <h3 class="sec-subtitle">Per-Rule Accuracy</h3>
+      <div class="rule-bars">
+        @for (r of perRuleAccuracy; track r.rule) {
+          <div class="rule-bar-row">
+            <span class="rb-label">{{ r.rule }}</span>
+            <div class="rb-track">
+              <div class="rb-fill" [style.width.%]="barWidth(r.correct, r.total)" [style.background]="r.color"></div>
+              <div class="rb-gray" [style.width.%]="grayWidth(r.correct, r.total)"></div>
+            </div>
+            <span class="rb-score">{{ r.correct }}/{{ r.total }}</span>
+          </div>
+        }
+      </div>
+
+      <!-- Ground Truth Upload -->
+      <h3 class="sec-subtitle">Ground Truth Upload</h3>
+      <div class="ground-truth-box">
+        <span class="material-symbols-rounded gt-icon">cloud_upload</span>
+        <h4>Upload Client Annotations</h4>
+        <p>Client provides their own scored assessment. System correlates scores.</p>
+        <button class="btn-outline">UPLOAD GROUND TRUTH</button>
+      </div>
+    </div>
+    }
+
   </div>
-  }
 </div>
