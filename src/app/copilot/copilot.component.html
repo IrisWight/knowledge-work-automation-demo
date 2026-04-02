@@ -1,0 +1,287 @@
+<div class="page">
+  <!-- ══════ HEADER ══════ -->
+  <header class="hdr">
+    <div class="hdr-left">
+      <span class="material-symbols-rounded hdr-logo">neurology</span>
+      <div>
+        <h1 class="hdr-title">Compliance Intelligence</h1>
+        <p class="hdr-sub">Knowledge Work Automation for FSI</p>
+      </div>
+    </div>
+    <nav class="tabs">
+      <button class="tab" [class.on]="activeTab==='overview'" (click)="activeTab='overview'">
+        <span class="material-symbols-rounded">dashboard</span> Overview
+      </button>
+      <button class="tab" [class.on]="activeTab==='issues'" (click)="activeTab='issues'">
+        <span class="material-symbols-rounded">policy</span> Issues
+        <span class="tab-badge">{{ totalCases }}</span>
+      </button>
+    </nav>
+  </header>
+
+  <!-- ══════ OVERVIEW TAB ══════ -->
+  @if (activeTab === 'overview') {
+  <div class="view fade-up">
+
+    <!-- Input -->
+    <section class="card input-card">
+      <div class="input-row">
+        <div class="input-wrap">
+          <span class="material-symbols-rounded ic-muted">search</span>
+          <input class="input" value="Check compliance of Vendor Contract X against EU AI Act" readonly />
+        </div>
+        <button class="btn-primary" (click)="runAnalysis()" [class.busy]="pipelineRunning">
+          <span class="material-symbols-rounded">{{ pipelineRunning ? 'hourglass_top' : 'play_arrow' }}</span>
+          {{ pipelineRunning ? 'Analyzing…' : 'Run Analysis' }}
+        </button>
+      </div>
+      <div class="badges">
+        <span class="badges-lbl">Sources</span>
+        @for (s of dataSources; track s.label) {
+          <span class="badge" [style.--c]="s.color">
+            <span class="material-symbols-rounded">{{ s.icon }}</span>{{ s.label }}
+          </span>
+        }
+      </div>
+    </section>
+
+    <!-- Pipeline -->
+    <section class="card">
+      <div class="sec-hdr"><span class="material-symbols-rounded sh-icon pipe-c">route</span><h2>Pipeline</h2></div>
+      <div class="pipe">
+        @for (step of pipelineSteps; track step.label; let i = $index) {
+          <div class="pipe-step" [class.done]="i <= activeStep" [class.now]="i === activeStep && pipelineRunning">
+            <div class="pipe-dot"><span class="material-symbols-rounded">{{ i <= activeStep ? 'check' : step.icon }}</span></div>
+            <span class="pipe-lbl">{{ step.label }}</span>
+          </div>
+          @if (i < pipelineSteps.length - 1) {
+            <div class="pipe-line" [class.done]="i < activeStep"></div>
+          }
+        }
+      </div>
+    </section>
+
+    <!-- Result + Comparison side by side -->
+    @if (showResult) {
+    <div class="two-col fade-up">
+      <!-- Violation Detected -->
+      <section class="card">
+        <div class="sec-hdr"><span class="material-symbols-rounded sh-icon red-c">error</span><h2>Violation Detected</h2><span class="sev-pill high">High Severity</span></div>
+        <div class="viol-body">
+          <div class="viol-row">
+            <span class="viol-label">Clause</span>
+            <span class="viol-val">"Invoice issued after <mark class="violation-hl">45 days</mark>"</span>
+          </div>
+          <div class="viol-row">
+            <span class="viol-label">Rule</span>
+            <span class="viol-val">"Must be issued within 30 days"</span>
+          </div>
+          <div class="viol-row">
+            <span class="viol-label">Source</span>
+            <span class="viol-val muted">EU AI Act — Art. 9, §3</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Comparison -->
+      @if (showComparison) {
+      <section class="card cmp-card fade-up">
+        <div class="sec-hdr"><span class="material-symbols-rounded sh-icon blue-c">compare</span><h2>Comparison</h2></div>
+        <div class="cmp-grid">
+          <div class="cmp-side rule-side">
+            <div class="cmp-tag"><span class="material-symbols-rounded">gavel</span> Rule (Source of Truth)</div>
+            <p class="cmp-text">"Invoices must be issued within <strong>30 days</strong> of service delivery."</p>
+          </div>
+          <div class="cmp-vs">VS</div>
+          <div class="cmp-side doc-side">
+            <div class="cmp-tag"><span class="material-symbols-rounded">description</span> Actual Document</div>
+            <p class="cmp-text">"Invoice issued after <mark class="violation-hl">45 days</mark> of service delivery."</p>
+          </div>
+        </div>
+        <div class="cmp-score">
+          <span class="material-symbols-rounded">cancel</span>
+          Match Score: <strong>0%</strong> — Non-compliant
+        </div>
+      </section>
+      }
+    </div>
+    }
+
+    <!-- Actions + Evaluation + Human-in-the-loop -->
+    @if (showActions) {
+    <div class="two-col fade-up">
+      <!-- Actions -->
+      <section class="card">
+        <div class="sec-hdr"><span class="material-symbols-rounded sh-icon violet-c">bolt</span><h2>Actions</h2></div>
+        <div class="act-btns">
+          <button class="act-btn"><span class="material-symbols-rounded">flag</span>Flag for review</button>
+          <button class="act-btn"><span class="material-symbols-rounded">mail</span>Notify compliance team</button>
+          <button class="act-btn"><span class="material-symbols-rounded">edit_document</span>Request correction</button>
+        </div>
+        <!-- Human-in-the-loop -->
+        <div class="hitl">
+          <span class="hitl-label">Human Review</span>
+          @if (findingStatus === 'pending') {
+            <button class="hitl-btn accept" (click)="acceptFinding()"><span class="material-symbols-rounded">check_circle</span>Accept</button>
+            <button class="hitl-btn reject" (click)="rejectFinding()"><span class="material-symbols-rounded">cancel</span>Reject</button>
+          } @else {
+            <span class="hitl-result" [class.accepted]="findingStatus==='accepted'" [class.rejected]="findingStatus==='rejected'">
+              <span class="material-symbols-rounded">{{ findingStatus === 'accepted' ? 'verified' : 'block' }}</span>
+              {{ findingStatus === 'accepted' ? 'Finding Accepted' : 'Finding Rejected' }}
+            </span>
+          }
+        </div>
+        <!-- Link to Issues -->
+        <button class="link-issues" (click)="switchToIssues()">
+          <span class="material-symbols-rounded">policy</span>View all detected issues<span class="material-symbols-rounded arr">arrow_forward</span>
+        </button>
+      </section>
+      <!-- Evaluation -->
+      @if (showEvaluation) {
+      <section class="card eval-card fade-up">
+        <div class="sec-hdr"><span class="material-symbols-rounded sh-icon green-c">verified</span><h2>Evaluation (Trust Layer)</h2></div>
+        <div class="eval-bars">
+          @for (e of evaluation; track e.label) {
+            <div class="eval-row">
+              <span class="eval-lbl">{{ e.label }}</span>
+              <div class="eval-track"><div class="eval-fill" [style.width.%]="e.value" [style.background]="e.color"></div></div>
+              <span class="eval-pct" [style.color]="e.color">{{ e.value }}%</span>
+            </div>
+          }
+        </div>
+        <div class="eval-examples">
+          <span class="eval-ex-title">Verification Samples</span>
+          @for (ex of evalExamples; track ex.expected) {
+            <div class="eval-ex">
+              <span class="eval-ex-lbl">Expected:</span><span>{{ ex.expected }}</span>
+              <span class="eval-ex-lbl">Detected:</span><span>{{ ex.detected }}</span>
+              <span class="eval-match"><span class="material-symbols-rounded">check_circle</span>Match</span>
+            </div>
+          }
+        </div>
+      </section>
+      }
+    </div>
+    }
+
+  </div>
+  }
+
+  <!-- ══════ ISSUES TAB ══════ -->
+  @if (activeTab === 'issues') {
+  <div class="view fade-up">
+    <div class="issues-layout">
+
+      <!-- Left: List -->
+      <aside class="issues-list-panel card">
+        <div class="sec-hdr il-hdr">
+          <span class="material-symbols-rounded sh-icon violet-c">policy</span>
+          <div><h2>Detected Issues</h2><p class="sub">Across {{ totalCases }} documents</p></div>
+        </div>
+        <div class="il-items">
+          @for (issue of issues; track issue.id) {
+            <button class="il-item" [class.sel]="issue.id === selectedIssueId" (click)="selectIssue(issue.id)">
+              <div class="il-bar" [class]="issue.severity"></div>
+              <div class="il-body">
+                <div class="il-top"><span class="il-title">{{ issue.title }}</span><span class="sev-pill" [class]="issue.severity">{{ issue.severity }}</span></div>
+                <span class="il-meta"><span class="material-symbols-rounded">folder_open</span>{{ issue.cases }} cases</span>
+              </div>
+              <span class="material-symbols-rounded il-chev">chevron_right</span>
+            </button>
+          }
+        </div>
+        <div class="il-footer">
+          <div class="il-stat"><span class="il-num">{{ issues.length }}</span><span class="il-lbl">Issues</span></div>
+          <div class="il-stat"><span class="il-num high-c">{{ highCount }}</span><span class="il-lbl">High</span></div>
+          <div class="il-stat"><span class="il-num med-c">{{ mediumCount }}</span><span class="il-lbl">Medium</span></div>
+        </div>
+      </aside>
+
+      <!-- Right: Detail -->
+      <main class="issue-detail card">
+        <div class="id-hdr">
+          <div class="id-dot" [class]="selectedIssue.severity"></div>
+          <h2>{{ selectedIssue.title }}</h2>
+          <span class="sev-pill lg" [class]="selectedIssue.severity">{{ selectedIssue.severity }}</span>
+        </div>
+        <p class="id-sub">{{ selectedIssue.cases }} cases across multiple documents</p>
+
+        <div class="id-body">
+          <!-- Rule -->
+          <section class="id-sec">
+            <div class="sec-hdr"><span class="material-symbols-rounded sh-icon blue-c">gavel</span><h3>Rule</h3></div>
+            <div class="rule-box">
+              <p class="rule-txt">{{ selectedIssue.rule }}</p>
+              <span class="rule-src"><span class="material-symbols-rounded">menu_book</span>{{ selectedIssue.ruleSource }}</span>
+            </div>
+          </section>
+
+          <!-- Affected Cases -->
+          <section class="id-sec">
+            <div class="sec-hdr"><span class="material-symbols-rounded sh-icon orange-c">compare</span><h3>Affected Cases</h3><span class="cnt-pill">{{ selectedIssue.documents.length }} docs</span></div>
+            @for (doc of selectedIssue.documents; track doc.name) {
+              <div class="doc-card">
+                <div class="doc-hdr"><span class="material-symbols-rounded">description</span><span class="doc-name">{{ doc.name }}</span></div>
+                <div class="doc-rows">
+                  <div class="doc-row exp"><span class="doc-lbl">Expected</span><span>{{ doc.expected }}</span></div>
+                  <div class="doc-row act"><span class="doc-lbl">Actual</span><span [innerHTML]="highlightText(doc.actual, doc.highlight)"></span></div>
+                </div>
+              </div>
+            }
+          </section>
+
+          <!-- Discrepancy -->
+          <section class="id-sec">
+            <div class="sec-hdr"><span class="material-symbols-rounded sh-icon purple-c">assessment</span><h3>Discrepancy Summary</h3></div>
+            <div class="disc-card">
+              <div class="disc-num"><span>{{ selectedIssue.summary.affectedRecords }}</span><small>records</small></div>
+              <div class="disc-detail">{{ selectedIssue.summary.detail }}</div>
+            </div>
+          </section>
+
+          <!-- Comparison (reused pattern) -->
+          <section class="id-sec">
+            <div class="sec-hdr"><span class="material-symbols-rounded sh-icon blue-c">compare</span><h3>Comparison</h3></div>
+            <div class="cmp-grid compact">
+              <div class="cmp-side rule-side">
+                <div class="cmp-tag"><span class="material-symbols-rounded">gavel</span> Rule</div>
+                <p class="cmp-text">{{ selectedIssue.documents[0].expected }}</p>
+              </div>
+              <div class="cmp-vs">VS</div>
+              <div class="cmp-side doc-side">
+                <div class="cmp-tag"><span class="material-symbols-rounded">description</span> Document</div>
+                <p class="cmp-text" [innerHTML]="highlightText(selectedIssue.documents[0].actual, selectedIssue.documents[0].highlight)"></p>
+              </div>
+            </div>
+          </section>
+
+          <div class="id-bottom">
+            <!-- Actions -->
+            <section class="id-sec id-half">
+              <div class="sec-hdr"><span class="material-symbols-rounded sh-icon violet-c">bolt</span><h3>Actions</h3></div>
+              <div class="act-btns col">
+                @for (a of selectedIssue.actions; track a.label) {
+                  <button class="act-btn"><span class="material-symbols-rounded">{{ a.icon }}</span>{{ a.label }}</button>
+                }
+              </div>
+            </section>
+
+            <!-- Validation -->
+            <section class="id-sec id-half eval-highlight">
+              <div class="sec-hdr"><span class="material-symbols-rounded sh-icon green-c">verified</span><h3>Validation</h3></div>
+              <div class="val-grid">
+                @for (v of selectedIssue.validation; track v.label) {
+                  <div class="val-cell">
+                    <span class="val-v" [style.color]="v.color">{{ v.value }}</span>
+                    <span class="val-l">{{ v.label }}</span>
+                  </div>
+                }
+              </div>
+            </section>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+  }
+</div>

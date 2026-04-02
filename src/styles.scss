@@ -1,0 +1,28 @@
+@use '@angular/material' as mat;
+
+// Dark theme
+$dark-theme: mat.define-theme((
+  color: (
+    theme-type: dark,
+    primary: mat.$violet-palette,
+    tertiary: mat.$cyan-palette,
+  ),
+  density: (
+    scale: 0,
+  ),
+));
+
+html {
+  @include mat.all-component-themes($dark-theme);
+
+  & {
+    color-scheme: dark;
+  }
+}
+
+body {
+  margin: 0;
+  font-family: Roboto, "Helvetica Neue", sans-serif;
+  background: #121212;
+  color: #fff;
+}
